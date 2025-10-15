@@ -2,11 +2,22 @@ import nodemailer from 'nodemailer';
 
 // Create reusable transporter object using SMTP transport
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  const port = parseInt(process.env.EMAIL_PORT) || 587;
+  const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+  
+  console.log('📧 Email transporter configuration:', {
     service: process.env.EMAIL_SERVICE || 'gmail',
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 587,
-    secure: true, // true for 465, false for other ports
+    port: port,
+    secure: secure,
+    user: process.env.EMAIL_USER ? '✅ Set' : '❌ Not set'
+  });
+  
+  return nodemailer.createTransport({
+    service: process.env.EMAIL_SERVICE || 'gmail',
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: port,
+    secure: secure, // true for 465, false for other ports
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
@@ -26,7 +37,7 @@ export const sendContactNotification = async (contactData) => {
 
     const mailOptions = {
       from: `"Bahoju Tech Website" <${process.env.EMAIL_USER}>`,
-      to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER, // Send admin notifications to your Gmail
       subject: `New Contact Form Submission - ${contactData.inquiryType}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -332,7 +343,7 @@ export const sendAutoResponseEmail = async (contactData) => {
             
             <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
               <p style="margin: 0; color: #856404; font-size: 14px;">
-                <strong>Need immediate assistance?</strong> Feel free to call us at +1 (555) 123-4567 or email us directly at ${process.env.EMAIL_USER}
+                <strong>Need immediate assistance?</strong> Feel free to call us at +234 8073762546 or email us directly at ${process.env.EMAIL_USER}
               </p>
             </div>
           </div>
@@ -349,11 +360,14 @@ export const sendAutoResponseEmail = async (contactData) => {
       `
     };
 
+    console.log('📧 Sending auto-response email to:', contactData.email);
     const info = await transporter.sendMail(mailOptions);
-    console.log('Auto-response email sent:', info.messageId);
+    console.log('✅ Auto-response email sent successfully!');
+    console.log('Message ID:', info.messageId);
     return info;
   } catch (error) {
-    console.error('Error sending auto-response email:', error);
+    console.error('❌ Error sending auto-response email:', error.message);
+    console.error('Full error:', error);
     throw error;
   }
 };
