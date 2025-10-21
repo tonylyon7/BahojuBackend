@@ -2,6 +2,12 @@ import nodemailer from 'nodemailer';
 
 // Create reusable transporter object using SMTP transport
 const createTransporter = () => {
+  // Check if email service is configured
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log('⚠️  Email service not configured - emails will be logged instead of sent');
+    return null;
+  }
+
   const port = parseInt(process.env.EMAIL_PORT) || 587;
   const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
   
@@ -10,19 +16,54 @@ const createTransporter = () => {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: port,
     secure: secure,
-    user: process.env.EMAIL_USER ? '✅ Set' : '❌ Not set'
+    user: process.env.EMAIL_USER ? '✅ Set' : '❌ Not set',
+    pass: process.env.EMAIL_PASS ? '✅ Set' : '❌ Not set'
   });
   
   return nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || 'gmail',
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: port,
-    secure: secure, // true for 465, false for other ports
+    secure: secure,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
-    }
+    },
+    // Add timeout and connection options
+    connectionTimeout: parseInt(process.env.EMAIL_CONNECTION_TIMEOUT) || 10000,
+    greetingTimeout: parseInt(process.env.EMAIL_GREETING_TIMEOUT) || 5000,
+    socketTimeout: parseInt(process.env.EMAIL_SOCKET_TIMEOUT) || 10000,
+    // Force IPv4 to avoid IPv6 connectivity issues
+    family: 4,
+    // Retry options
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+    // TLS options
+    tls: {
+      rejectUnauthorized: false,
+      ciphers: 'SSLv3'
+    },
+    // Additional debugging - disabled to reduce console noise
+    // debug: process.env.NODE_ENV === 'development',
+    // logger: process.env.NODE_ENV === 'development'
   });
+};
+
+// Mock email sending for development/testing
+const mockEmailSend = async (mailOptions) => {
+  console.log('📧 MOCK EMAIL SEND (Email service not configured):');
+  console.log('From:', mailOptions.from);
+  console.log('To:', mailOptions.to);
+  console.log('Subject:', mailOptions.subject);
+  console.log('HTML Length:', mailOptions.html ? mailOptions.html.length : 0, 'characters');
+  console.log('Text Length:', mailOptions.text ? mailOptions.text.length : 0, 'characters');
+  console.log('---');
+  
+  return {
+    messageId: 'mock-' + Date.now(),
+    response: 'Mock email sent successfully'
+  };
 };
 
 // Send contact form notification to admin
@@ -251,12 +292,19 @@ export const sendAutoResponseEmail = async (contactData) => {
                 <h3 style="color: #0573A0; margin-top: 0;">Our Training Programs:</h3>
                 <ul style="color: #555; line-height: 1.8;">
                   <li>Full-Stack Web Development</li>
+                  <li>Backend Development</li>
+                  <li>Frontend Development</li>
+                  <li>Cybersecurity</li>
                   <li>Mobile App Development (React Native, Flutter)</li>
                   <li>Cloud Computing (AWS, Azure, Google Cloud)</li>
                   <li>Digital Marketing & SEO</li>
                   <li>UI/UX Design</li>
                   <li>Data Science & Analytics</li>
-                  <li>Cybersecurity Fundamentals</li>
+                  <li>Cybersecurity + ETHICAL HACKING</li>
+                  <li>Project Management</li>
+                  <li>Data Analysis</li>
+                  <li>Digital Marketing & SEO</li>
+                  <li>Visual and Graphic Design</li>
                 </ul>
               </div>
               
@@ -277,6 +325,9 @@ export const sendAutoResponseEmail = async (contactData) => {
                 <h3 style="color: #0573A0; margin-top: 0;">Internship Opportunities:</h3>
                 <ul style="color: #555; line-height: 1.8;">
                   <li>Software Development Internship</li>
+                  <li>Backend Development Internship</li>
+                  <li>Frontend Development Internship</li>
+                  <li>Cybersecurity Internship</li>
                   <li>UI/UX Design Internship</li>
                   <li>Digital Marketing Internship</li>
                   <li>Data Analysis Internship</li>
@@ -368,6 +419,54 @@ export const sendAutoResponseEmail = async (contactData) => {
   } catch (error) {
     console.error('❌ Error sending auto-response email:', error.message);
     console.error('Full error:', error);
+    throw error;
+  }
+};
+
+// Generic send email function
+export const sendEmail = async ({ to, subject, html, text }) => {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: `"Bahoju Tech" <${process.env.EMAIL_USER || 'noreply@bahoju.com'}>`,
+      to,
+      subject,
+      html,
+      text
+    };
+
+    // Use mock email if transporter is null (no email config)
+    if (!transporter) {
+      return await mockEmailSend(mailOptions);
+    }
+
+    // Try to send real email with timeout handling
+    const info = await Promise.race([
+      transporter.sendMail(mailOptions),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email send timeout after 15 seconds')), 15000)
+      )
+    ]);
+
+    console.log('✅ Email sent successfully:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('❌ Error sending email:', error.message);
+    
+    // If it's a connection timeout or auth error, fall back to mock
+    if (error.code === 'ETIMEDOUT' || error.code === 'EAUTH' || error.message.includes('timeout')) {
+      console.log('📧 Falling back to mock email due to connection issues...');
+      const mailOptions = {
+        from: `"Bahoju Tech" <${process.env.EMAIL_USER || 'noreply@bahoju.com'}>`,
+        to,
+        subject,
+        html,
+        text
+      };
+      return await mockEmailSend(mailOptions);
+    }
+    
     throw error;
   }
 };

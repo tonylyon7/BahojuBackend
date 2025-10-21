@@ -15,6 +15,8 @@ import blogRoutes from './routes/blog.js';
 import uploadRoutes from './routes/upload.js';
 import cloudinaryUploadRoutes from './routes/cloudinaryUpload.js';
 import statsRoutes from './routes/stats.js';
+import newsletterRoutes from './routes/newsletter.js';
+import testRoutes from './routes/test.js';
 
 // Load environment variables
 dotenv.config();
@@ -75,6 +77,8 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/cloudinary', cloudinaryUploadRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/test', testRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
