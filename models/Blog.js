@@ -10,8 +10,7 @@ const blogSchema = new mongoose.Schema({
   slug: {
     type: String,
     unique: true,
-    lowercase: true,
-    index: true
+    lowercase: true
   },
   excerpt: {
     type: String,
@@ -125,9 +124,9 @@ const blogSchema = new mongoose.Schema({
 });
 
 // Index for better query performance
+// Slug index is automatically created by unique: true constraint
 blogSchema.index({ status: 1, publishedAt: -1 });
 blogSchema.index({ category: 1, status: 1 });
-blogSchema.index({ slug: 1 });
 blogSchema.index({ tags: 1 });
 blogSchema.index({ featured: 1, status: 1 });
 

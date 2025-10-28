@@ -38,7 +38,6 @@ const statsSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Only allow one stats document
-statsSchema.index({ _id: 1 }, { unique: true });
+// Only allow one stats document - _id is automatically unique
 
 export default mongoose.model('Stats', statsSchema);
