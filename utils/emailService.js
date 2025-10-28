@@ -272,6 +272,11 @@ export const sendAutoResponseEmail = async (contactData) => {
                   <li>Web Development & Design</li>
                   <li>Digital Transformation Consulting</li>
                   <li>System Integration & API Development</li>
+                  <li>Quality Assurance</li>
+                  <li>Project Management</li>
+                  <li>IT Support & Maintenance</li>
+                  <li>Security Solutions</li>
+                  <li>Blog Development & Management</li>
                 </ul>
               </div>
               
