@@ -285,7 +285,7 @@ router.use((error, req, res, next) => {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        message: 'File too large. Maximum size is 20MB for images.'
+        message: 'File too large. Maximum size is 50MB for images.'
       });
     }
     if (error.code === 'LIMIT_FILE_COUNT') {
