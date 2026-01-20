@@ -41,7 +41,7 @@ app.use(limiter);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://bahojutech.netlify.app',
+  'https://bahojuoldwebsite.netlify.app/',
   'https://bahojutech.com',
   process.env.FRONTEND_URL
 ].filter(Boolean); // Remove any undefined values
