@@ -41,26 +41,19 @@ app.use(limiter);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://bahojuwebsite.vercel.app',
-  'https://bahojuweb.vercel.app',
   'https://bahojutech.netlify.app',
   'https://bahojutech.com',
-  'https://www.bahojutech.com',
   process.env.FRONTEND_URL
-].filter(Boolean).map(url => url.replace(/\/$/, '')); // Remove any undefined values and trailing slashes
+].filter(Boolean); // Remove any undefined values
 
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    // Normalize origin by removing trailing slash
-    const normalizedOrigin = origin.replace(/\/$/, '');
-    
-    if (allowedOrigins.indexOf(normalizedOrigin) !== -1) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.error(`CORS blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
